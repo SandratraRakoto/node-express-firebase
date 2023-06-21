@@ -7,17 +7,20 @@ const bodyParser = require("body-parser");
 const stripe = require("stripe")(process.env.STRIPE_API_KEY);
 const sendGridClient = require("@sendgrid/mail");
 sendGridClient.setApiKey(process.env.SENDGRID_API_KEY);
-const allowedDomains = process.env.FONT_END_URL.split(",");
+const allowedDomains = process.env.FONT_END_URL ?
+process.env.FONT_END_URL.split(","): [];
 
 const app = express();
 app.use(cors({
-  origin: allowedDomains,
+  origin: allowedDomains.length? allowedDomains: "*",
 }));
 app.use(bodyParser.json());
 
 const blockUnknownDomains = (req, res, next)=> {
   const requestOrigin = req.headers.origin;
-  if (allowedDomains.includes(requestOrigin)) {
+  if (!allowedDomains.length) {
+    next();
+  } else if (allowedDomains.includes(requestOrigin)) {
     next();
   } else {
     res.status(403).json({error: "Access Forbidden"});
